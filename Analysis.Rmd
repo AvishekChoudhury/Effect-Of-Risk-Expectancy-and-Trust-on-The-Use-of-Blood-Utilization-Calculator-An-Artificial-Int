@@ -1,0 +1,353 @@
+---
+title: "Paper_1_Analysis"
+author: "Avishek Choudhury"
+date: "7/5/2021"
+output:
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+#Clear existing data and graphics
+rm(list=ls())
+graphics.off()
+#Load Hmisc library
+#install.packages("Hmisc")
+library(Hmisc)
+
+#Packages for Structural Equation Modelling
+# install.packages("lavaan")
+# install.packages("GPArotation")
+# install.packages("MVN")
+# install.packages("semTools")
+# install.packages("semPlot")
+# install.packages("psych")
+# install.packages("gsl")
+# install.packages("sjlabelled")
+
+library(lavaan)
+library(GPArotation)
+library(psych)
+library(semPlot)
+library(semTools)
+library(dplyr)
+library(sjlabelled)
+```
+#Reading Data
+
+```{r}
+data=read.csv('/Users/avishekchoudhury/Dropbox/Avishekk/DIssertation/Case study 2/Data/R/ProvidersPerceptionO_DATA_2021-06-28_1200.csv')
+```
+
+
+#Setting Labels
+## NASA TLX Congitive Workload
+```{r}
+label(data$record_id)="Record ID"
+label(data$mw02)="A large amount of deciding is required when using the Blood Utilization Calculator (BUC) to complete the tasks."
+label(data$mw03)="I have to remember large number of things to use the BUC to complete the tasks."
+label(data$mw04)="I feel a lot of time pressure when using the BUC to complete the tasks."
+label(data$mw05)="Overall, using the BUC to complete the tasks is:"
+label(data$mw06)="My pace when using the BUC to complete the tasks is:"
+label(data$mw07)="Overall, using the BUC to complete the tasks is:"
+label(data$mw011)="I am satisfied with my performance in accomplishing the tasks using the BUC."
+label(data$mw010)="The BUC improves my overall performance."
+label(data$mw013)="I need to work very hard to get satisfactory performance when using the BUC to complete the tasks."
+label(data$mw014)="When using the BUC to complete the tasks, I feel:"
+label(data$mw015)="When using the BUC to complete the tasks, I feel:"
+label(data$mw016)="When using the Blood Utilization Calculator (BUC) to complete the tasks, I feel:"
+```
+
+##Modified UTAUT 2.0  
+```{r}
+#Effort expectancy
+label(data$utaut03)="Learning how to use the BUC is easy for me."
+label(data$utaut05)="I find the BUC easy to use."
+label(data$utaut01)="It is easy for me to become skillful at using the BUC."
+
+#UTAUT --- Performance expectancy
+label(data$utaut07)="Using BUC has increased my chances of achieving things that are important to me."
+label(data$utaut08)="Using BUC allows me to perform tasks more quickly."
+label(data$utaut09)="Using BUC has increased my effectiveness in blood utilization calculation/transfusion."
+
+#UTAUT --- Enjoyment
+label(data$utaut010)="I find using the BUC enjoyable."
+
+#UTAUT --- Satisfaction
+label(data$utaut015)="Overall, I am satisfied with Blood Utilization Calculator (BUC)."
+
+#UTAUT --- Efficiency
+label(data$utaut017)="I will recommend the BUC to others."
+label(data$utaut021)="I am confident of using the BUC even if when there is no one around to show me how to do it."
+label(data$utaut022)="I am confident of using the BUC even if I have never used such a system before."
+
+#UTAUT --- Perceived Risk
+label(data$utaut023)="Using the BUC puts me at an overall greater risk."
+label(data$utaut024)="Using the BUC exposes my patients at overall greater risk."
+label(data$utaut025)="Using the BUC does not fit well with my routine clinical practices."
+
+#UTAUT --- Use of AI
+label(data$utaut026)="Assuming you continue to have access to the BUC, to what extent do you intend to use it?"
+label(data$utaut027)="If it were up to you, to what extent would you use BUC?"
+```
+
+##TRUST
+```{r}
+label(data$t01)="I trust the information I receive from the BUC."
+label(data$t04)="Overall, I trust the BUC."
+```
+
+##SITUATION AWARENESS
+```{r}
+#Ability to detect Important cues
+label(data$sa1)="Please rate your ability to identify critical cues while using the BUC."
+label(data$sa2)="How well do you understand what is going on with the data and patient while using BUC?"
+label(data$sa3)="How well could you predict what was about to occur next with the patients health after using the BUC?"
+label(data$sa4)="How aware are you of how to best achieve your goals while using the BUC?"
+
+#Difficult to detect Important cues
+label(data$sa5)="How difficult - in terms of mental effort required - is it for you to identify or detect critical clinical cues in the care process while using the BUC?"
+label(data$sa6)="How difficult - in terms of mental effort - is it to understand what is going on around you (patient health, other clinical activities) while using the BUC? "
+label(data$sa7)="How difficult - in terms of mental effort - is it to predict what will about to happen to the patient while using the BUC?"
+label(data$sa8)="How difficult - in terms of mental effort - is it to decide on how to best achieve mission goals while using the BUC?"
+```
+
+##DEMOGRAPHICS
+```{r}
+label(data$d8)="How familiar are you with artificial intelligence?"
+label(data$d9)="I think artificial intelligence systems have the potential to improve patient outcomes."
+label(data$d1)="With which role do you identify yourself with:"
+label(data$d2)="I have been practicing in the current position for approximately:"
+label(data$d3)="I have been using the Blood Utilization Calculator (BUC) for approximately:"
+label(data$d4)="With which race do you identify yourself with:"
+label(data$d5)="With which gender do you identify yourself with?"
+label(data$d6)="Please select your age range (in years)"
+label(data$evaluation_of_the_blood_utilization_calculator_complete)="Complete?"
+label(data$my_first_instrument_timestamp)="Survey Timestamp"
+label(data$my_first_instrument_complete)="Complete?"
+```
+
+#Setting Units
+
+##Setting Factors(will create new variable for factors)
+
+```{r}
+data$mw02.factor = factor(data$mw02,levels=c("1","2","3","4","5","6","7"))
+data$mw03.factor = factor(data$mw03,levels=c("1","2","3","4","5","6","7"))
+data$mw04.factor = factor(data$mw04,levels=c("1","2","3","4","5","6","7"))
+data$mw05.factor = factor(data$mw05,levels=c("1","2","3","4","5","6","7"))
+data$mw06.factor = factor(data$mw06,levels=c("1","2","3","4","5","6","7"))
+data$mw07.factor = factor(data$mw07,levels=c("1","2","3","4","5","6","7"))
+data$mw011.factor = factor(data$mw011,levels=c("1","2","3","4","5","6","7"))
+data$mw010.factor = factor(data$mw010,levels=c("1","2","3","4","5","6","7"))
+data$mw013.factor = factor(data$mw013,levels=c("1","2","3","4","5","6","7"))
+data$mw014.factor = factor(data$mw014,levels=c("1","2","3","4","5","6","7"))
+data$mw015.factor = factor(data$mw015,levels=c("1","2","3","4","5","6","7"))
+data$mw016.factor = factor(data$mw016,levels=c("1","2","3","4","5","6","7"))
+data$utaut03.factor = factor(data$utaut03,levels=c("1","2","3","4","5"))
+data$utaut05.factor = factor(data$utaut05,levels=c("1","2","3","4","5"))
+data$utaut01.factor = factor(data$utaut01,levels=c("1","2","3","4","5"))
+data$utaut07.factor = factor(data$utaut07,levels=c("1","2","3","4","5"))
+data$utaut08.factor = factor(data$utaut08,levels=c("1","2","3","4","5"))
+data$utaut09.factor = factor(data$utaut09,levels=c("1","2","3","4","5"))
+data$utaut010.factor = factor(data$utaut010,levels=c("1","2","3","4","5"))
+data$utaut015.factor = factor(data$utaut015,levels=c("1","2","3","4","5"))
+data$utaut017.factor = factor(data$utaut017,levels=c("1","2","3","4","5"))
+data$utaut021.factor = factor(data$utaut021,levels=c("1","2","3","4","5"))
+data$utaut022.factor = factor(data$utaut022,levels=c("1","2","3","4","5"))
+data$utaut023.factor = factor(data$utaut023,levels=c("1","2","3","4","5"))
+data$utaut024.factor = factor(data$utaut024,levels=c("1","2","3","4","5"))
+data$utaut025.factor = factor(data$utaut025,levels=c("1","2","3","4","5"))
+data$utaut026.factor = factor(data$utaut026,levels=c("1","2","3","4","5"))
+data$utaut027.factor = factor(data$utaut027,levels=c("1","2","3","4","5"))
+data$t01.factor = factor(data$t01,levels=c("1","2","3","4","5","6","7"))
+data$t04.factor = factor(data$t04,levels=c("1","2","3","4","5","6","7"))
+data$sa1.factor = factor(data$sa1,levels=c("4","3","2","1"))
+data$sa2.factor = factor(data$sa2,levels=c("4","3","2","1"))
+data$sa3.factor = factor(data$sa3,levels=c("4","3","2","1"))
+data$sa4.factor = factor(data$sa4,levels=c("4","3","2","1"))
+data$sa5.factor = factor(data$sa5,levels=c("4","3","2","1"))
+data$sa6.factor = factor(data$sa6,levels=c("4","3","2","1"))
+data$sa7.factor = factor(data$sa7,levels=c("4","3","2","1"))
+data$sa8.factor = factor(data$sa8,levels=c("4","3","2","1"))
+data$d8.factor = factor(data$d8,levels=c("1","2","3","4"))
+data$d9.factor = factor(data$d9,levels=c("1","2","3","4","5"))
+data$d1.factor = factor(data$d1,levels=c("2","1","3","4","5"))
+data$d2.factor = factor(data$d2,levels=c("1","2","3","4","5"))
+data$d3.factor = factor(data$d3,levels=c("1","2","3"))
+data$d4.factor = factor(data$d4,levels=c("1","2","3","4","5","6"))
+data$d5.factor = factor(data$d5,levels=c("1","2","3"))
+data$d6.factor = factor(data$d6,levels=c("1","2","3","4","5","6","7","8","9","10"))
+
+levels(data$mw02.factor)=c("Strongly Disagree","Disagree","Somewhat Disagree","Neutral","Somewhat Agree","Agree","Strongly Agree")
+levels(data$mw03.factor)=c("Strongly Disagree","Disagree","Somewhat Disagree","Neutral","Somewhat Agree","Agree","Strongly Agree")
+levels(data$mw04.factor)=c("Strongly Disagree","Disagree","Somewhat Disagree","Neutral","Somewhat Agree","Agree","Strongly Agree")
+levels(data$mw05.factor)=c("Very Demanding","Demanding","Somewhat Demanding","Neutral","Somewhat Easy","Easy","Very Easy")
+levels(data$mw06.factor)=c("Very Hurried","Hurried","Somewhat Hurried","Neutral","Somewhat Relaxed","Relaxed","Very Relaxed")
+levels(data$mw07.factor)=c("Very Complex","Complex","Somewhat Complex","Neutral","Somewhat Simple","Simple","Very Simple")
+levels(data$mw011.factor)=c("Strongly Disagree","Disagree","Somewhat Disagree","Neutral","Somewhat Agree","Agree","Strongly Agree")
+levels(data$mw010.factor)=c("Strongly Disagree","Disagree","Somewhat Disagree","Neutral","Somewhat Agree","Agree","Strongly Agree")
+levels(data$mw013.factor)=c("Strongly Disagree","Disagree","Somewhat Disagree","Neutral","Somewhat Agree","Agree","Strongly Agree")
+levels(data$mw014.factor)=c("Strongly Discouraged","Discouraged","Somewhat Discouraged","Neutral","Somewhat Gratified","Gratified","Strongly Gratified")
+levels(data$mw015.factor)=c("Very Irritated","Irritated","Somewhat Irritated","Neutral","Somewhat Relaxed","Relaxed","Very Relaxed")
+levels(data$mw016.factor)=c("Very Stressed","Stressed","Somewhat Stressed","Neutral","Somewhat Content","Content","Very Content")
+
+levels(data$utaut03.factor)=c("Strongly Disagree","Disagree","Neutral","Agree","Strongly Agree")
+levels(data$utaut05.factor)=c("Strongly Disagree","Disagree","Neutral","Agree","Strongly Agree")
+levels(data$utaut01.factor)=c("Strongly Disagree","Disagree","Neutral","Agree","Strongly Agree")
+levels(data$utaut07.factor)=c("Strongly Disagree","Disagree","Neutral","Agree","Strongly Agree")
+levels(data$utaut08.factor)=c("Strongly Disagree","Disagree","Neutral","Agree","Strongly Agree")
+levels(data$utaut09.factor)=c("Strongly Disagree","Disagree","Neutral","Agree","Strongly Agree")
+levels(data$utaut010.factor)=c("Strongly Disagree","Disagree","Neutral","Agree","Strongly Agree")
+levels(data$utaut015.factor)=c("Strongly Disagree","Disagree","Neutral","Agree","Strongly Agree")
+levels(data$utaut017.factor)=c("Strongly Disagree","Disagree","Neutral","Agree","Strongly Agree")
+levels(data$utaut021.factor)=c("Strongly Disagree","Disagree","Neutral","Agree","Strongly Agree")
+levels(data$utaut022.factor)=c("Strongly Disagree","Disagree","Neutral","Agree","Strongly Agree")
+levels(data$utaut023.factor)=c("Strongly Disagree","Disagree","Neutral","Agree","Strongly Agree")
+levels(data$utaut024.factor)=c("Strongly Disagree","Disagree","Neutral","Agree","Strongly Agree")
+levels(data$utaut025.factor)=c("Strongly Disagree","Disagree","Neutral","Agree","Strongly Agree")
+levels(data$utaut026.factor)=c("Almost Never","Rarely","Neutral","Often","Very Often")
+levels(data$utaut027.factor)=c("Almost Never","Rarely","Neutral","Often","Very Often")
+
+levels(data$t01.factor)=c("Strongly Disagree","Disagree","Somewhat Disagree","Neutral","Somewhat Agree","Agree","Strongly Agree")
+levels(data$t04.factor)=c("Strongly Disagree","Disagree","Somewhat Disagree","Neutral","Somewhat Agree","Agree","Strongly Agree")
+
+levels(data$sa1.factor)=c("Very easy - able to identity all cues","Fairly easy - could identify most cues","Somewhat difficult - many cues hard to identify","Very difficult - a substantial problem in identifying cues")
+levels(data$sa2.factor)=c("Very well - fully understood the situation","Fairly well - understood most aspects of the situation","Somewhat poorly - difficulty in understanding much of the situation","Very poorly - a situation made no sense")
+levels(data$sa3.factor)=c("Very well - could predict with accuracy what was about to occur","Fairly well - could make accurate prediction most of the time","Somewhat poor - misunderstood the situation much of the time","Very poor - unable to predict what was about to occur")
+levels(data$sa4.factor)=c("Very aware - knew how to achieve goals at all times","Fairly aware - knew most of the time how to achieve mission goals","Somewhat unaware - was not aware of how to achieve some goals","Very unaware - generally unaware of how to achieve goals")
+levels(data$sa5.factor)=c("Very easy - could identify relevant cues with little effort","Fairly easy - could identify relevant cues, but some effort required","Somewhat difficult - some effort was required to identify most cues","Very difficult - substantial effort required to identify relevant cues")
+levels(data$sa6.factor)=c("Very easy - understood what was going on with little effort","Fairly easy - understood events with only moderate effort","Somewhat difficult - hard to comprehend some aspects of the situation","Very difficult - hard to understand most or all aspects of the situation")
+levels(data$sa7.factor)=c("Very easy - little or no effort needed","Fairly easy-moderate effort required","Somewhat difficult - many projections required substantial effort","Very difficult - substantial effort required on most or all projections")
+levels(data$sa8.factor)=c("Very easy - little or no effort needed","Fairly easy-moderate effort required","Somewhat difficult - substantial effort needed on some decisions","Very difficult - most or all decisions required substantial effort")
+
+levels(data$d8.factor)=c("Not familiar","Somewhat familiar","Very familiar","Expert")
+levels(data$d9.factor)=c("Strongly Disagree","Dont agree","Neutral","Agree","Strongly Agree")
+levels(data$d1.factor)=c("Registered Nurse","Physician (Attending or Fellow)","Physician (Resident)","PA","NP")
+levels(data$d2.factor)=c("(0-2) years","(3-5) years","(6-8) years","(9-11) years","(more than 11 years)")
+levels(data$d3.factor)=c("(0-2) years","(3-5) years","(more than 5) years")
+levels(data$d4.factor)=c("African American","White American","Hispanic / Latino","Asian / Indian","Other","Prefer not to respond")
+levels(data$d5.factor)=c("Male","Female","Other")
+levels(data$d6.factor)=c("18 - 24","25 - 30","31 - 35","36 - 40","41 - 45","46 - 50","51 - 55","56 - 60","61 - 65","More than 65")
+
+```
+
+## Mediation Model with Trust as Mediator
+
+## Confirmatory Factor Analysis
+```{r}
+modelCFA <- '
+          EE=~utaut03 + utaut05 + utaut01
+          PE=~utaut07 + utaut08 + utaut09
+          PR=~utaut023 + utaut024
+          E=~ EE+PE
+'
+
+fitCFA <- sem(modelCFA, data=data)
+
+summary(fitCFA, fit.measures=TRUE,standardized=TRUE)
+fitMeasures(fitCFA, c("cfi", "rmsea", "srmr"))
+```
+
+-- Plot CFA
+```{r}
+semPaths(fitCFA, what="paths", whatLabels="stand", rotation=1)
+```
+
+## Structural Equations
+
+
+## Model A: TURST as mediator but not direct link connecting EXPECTANCY or PERCIEVED RISK to AI USE
+
+--In this model we only have direct link TRUST to INTENTION OF USNG AI. 
+
+--Here we notice that TRUST significantly to mediate the relationship.
+
+```{r}
+modelA <- '
+          PE=~utaut07 + utaut08 + utaut09
+          EE=~ utaut03 + utaut05 + utaut01
+          PR=~utaut023 + utaut024
+          E=~ PE + EE
+          T=~ t04 + t01
+          
+    # Regression:
+         
+          T~c1*E
+          T~c2*PR
+          utaut027~d*T
+          
+          Indirect_E_Use := c1 * d
+          Indirect_PR_Use := c2 * d
+          
+        
+'
+
+fitA <- sem(modelA, data=data)
+lavInspect(fitA, "cov.lv")
+summary(fitA, fit.measures=TRUE, standardized=TRUE)
+fitMeasures(fitA, c("cfi", "gfi","rmsea", "srmr","agfi","tli"))
+```
+# ModelA: Reliability measures
+
+```{r}
+factor1 <- select(data, utaut03 , utaut05 , utaut01)
+alpha(factor1, check.keys = TRUE)
+
+factor2<- select(data, utaut07 , utaut08 , utaut09)
+alpha(factor2, check.keys = TRUE)
+
+factor3<- select(data, utaut023 , utaut024)
+alpha(factor3, check.keys = TRUE)
+```
+
+# Plot Model A
+```{r}
+semPaths(fitA, what="paths", whatLabels="stand", rotation=3, layout = "tree2")
+```
+
+
+# Model B
+
+```{r}
+modelB <- '
+          PE=~utaut07 + utaut08 + utaut09
+          EE=~ utaut03 + utaut05 + utaut01
+          PR=~utaut023 + utaut024
+          E=~ PE + EE
+          T=~ t04 + t01
+          
+    # Regression:
+         
+          E~c1*T
+          PR~c2*T
+          utaut027~d*T
+'
+
+fitB <- sem(modelB, data=data)
+lavInspect(fitB, "cov.lv")
+summary(fitB, fit.measures=TRUE, standardized=TRUE)
+fitMeasures(fitB, c("cfi", "gfi","rmsea", "srmr","agfi","tli"))
+```
+
+# Plot Model B
+```{r}
+semPaths(fitB, what="paths", whatLabels="stand", rotation=3, layout = "tree2")
+```
+
+## Comparing the models
+
+
+```{r}
+anova(fitA,fitB)
+```
+
